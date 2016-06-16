@@ -1,0 +1,63 @@
+#!/bin/bash
+set -o nounset
+set -o errexit
+CURDIR=`dirname $0`
+DESTDIR=$CURDIR/../root
+INSTALLDIR=/usr/local/webserver/nginx
+
+function build() {
+yum install -y  gcc pcre-devel  zlib-devel openssl-devel
+./configure --user=www --group=www --prefix=$INSTALLDIR --with-http_stub_status_module --with-http_ssl_module --with-http_sub_module --with-md5=/usr/lib --with-sha1=/usr/lib --with-http_gzip_static_module --with-http_stub_status_module --with-http_realip_module --with-debug
+make 
+make install DESTDIR=$DESTDIR 
+}
+
+function gen_post() {
+cat > $CURDIR/post.sh << EOF
+#!/bin/bash
+set -o nounset
+set -o errexit
+if [ ! -e '$INSTALLDIR/logs' ]
+then
+	mkdir -p $INSTALLDIR/logs
+fi
+
+grep '^www:' /etc/group|grep -v 'grep' &>/dev/null
+if [ \$? != '0' ]
+then
+	groupadd www -g 302 && useradd -u 302 -g www -c "Web Server" www -s /sbin/nologin -M
+fi
+EOF
+
+}
+
+function gen_postun(){
+cat > $CURDIR/postun.sh << EOF
+#!/bin/bash
+set -o nounset
+set -o errexit
+mv --backup=t $INSTALLDIR /tmp/
+EOF
+
+}
+
+function gen_preun(){
+cat > $CURDIR/preun.sh << EOF
+#!/bin/bash
+set -o nounset
+#set -o errexit
+
+ps axu|grep nginx|grep 'master' &>/dev/null
+if [ \$? = '0' ]
+then
+	PID=\`ps axu|grep nginx|grep 'master'|awk '{print \$2}'\`
+	kill \$PID
+fi
+EOF
+}
+
+build
+gen_post
+gen_preun
+gen_postun
+

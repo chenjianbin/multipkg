@@ -1,0 +1,64 @@
+#!/bin/bash
+set -o nounset
+set -o errexit
+CURDIR=`dirname $0`
+DESTDIR=$CURDIR/../root
+INSTALLDIR=/usr/local/webserver/php
+
+function build() {
+yum install -y libxml2-devel bzip2-devel libcurl-devel libjpeg-turbo-devel libvpx-devel libpng-devel libXpm-devel freetype-devel gmp-devel openldap-devel openssl openssl-devel libmcrypt-devel
+./configure  '--with-fpm-user=www' '--with-fpm-group=www' --prefix=$INSTALLDIR '--disable-debug' '--with-pic' '--disable-rpath' '--with-bz2' '--without-gdbm' '--with-gettext' '--with-gmp' '--enable-mbregex' '--enable-mbstring' '--with-iconv' '--with-openssl=/usr' '--with-zlib' '--with-layout=GNU' '--enable-exif' '--enable-ftp' '--enable-sockets' '--enable-sysvsem' '--enable-sysvshm' '--enable-sysvmsg' '--enable-shmop' '--enable-calendar' '--enable-xml' '--with-pear' '--enable-fpm' '--with-pdo-mysql' '--with-curl' '--with-ldap' '--with-mysql' '--with-gd' '--with-freetype-dir' '--enable-gd-native-ttf' '--with-mysqli' '--with-mcrypt' '--enable-soap' '--enable-bcmath' '--with-jpeg-dir=/usr' '--with-xpm-dir=/usr' '--with-vpx-dir=/usr' '--with-libdir=lib64'
+make
+make test
+make install DESTDIR=$DESTDIR INSTALLROOT=$DESTDIR
+}
+
+function gen_post() {
+cat > $CURDIR/post.sh << EOF
+#!/bin/bash
+set -o nounset
+set -o errexit
+if [ ! -e '$INSTALLDIR/var/log' ]
+then
+	mkdir -p $INSTALLDIR/var/log
+fi
+
+grep '^www:' /etc/group|grep -v 'grep' &>/dev/null
+if [ \$? != '0' ]
+then
+	groupadd www -g 302 && useradd -u 302 -g www -c "Web Server" www -s /sbin/nologin -M
+fi
+EOF
+
+}
+
+function gen_postun(){
+cat > $CURDIR/postun.sh << EOF
+#!/bin/bash
+set -o nounset
+set -o errexit
+mv --backup=t $INSTALLDIR /tmp/
+EOF
+
+}
+
+function gen_preun(){
+cat > $CURDIR/preun.sh << EOF
+#!/bin/bash
+set -o nounset
+#set -o errexit
+
+ps axu|grep 'php'|grep 'master' &>/dev/null
+if [ \$? = '0' ]
+then
+	PID=\`ps axu|grep php|grep 'master'|awk '{print \$2}'\`
+	kill \$PID
+fi
+EOF
+}
+
+#build
+gen_post
+gen_preun
+gen_postun
+

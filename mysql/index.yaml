@@ -1,0 +1,16 @@
+default:
+    name: mysql
+    version: '5.6.29'
+    summary: mysql customized by miguan
+    arch: x86_64
+#    buildprefix: /usr/local/webserver/nginx
+
+rpm:
+    release: '1.centos7'
+    requires: 
+    - glibc
+    - libaio
+    - libgcc
+    - libstdc++
+    - ncurses-libs
+    - zlib

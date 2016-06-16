@@ -1,0 +1,78 @@
+#!/bin/bash
+set -o nounset
+set -o errexit
+CURDIR=`dirname $0`
+#DESTDIR=$CURDIR/../root
+INSTALLDIR=/usr/local/webserver/mysql
+
+#build 函数不要用，这个只是来辅助记忆而已
+function build() {
+yum install cmake libaio-devel zlib-devel systemtap openssl-devel readline-devel ncurses-devel  snappy-devel libtool -y
+cmake ./ \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/webserver/mysql \
+        -DWITH_PARTITION_STORAGE_ENGINE=1 \
+        -DWITH_INNOBASE_STORAGE_ENGINE=1 \
+        -DWITH_ARCHIVE_STORAGE_ENGINE=1 \
+        -DWITH_BLACKHOLE_STORAGE_ENGINE=0 \
+        -DWITH_CSV_STORAGE_ENGINE=1 \
+        -DWITH_HEAP_STORAGE_ENGINE=1 \
+        -DWITH_MYISAM_STORAGE_ENGINE=1 \
+        -DWITH_MYISAMMRG_STORAGE_ENGINE=1 \
+        -DWITH_ZLIB=bundled \
+        -DENABLED_LOCAL_INFILE=1 \
+        -DDEFAULT_CHARSET=utf8 \
+        -DDEFAULT_COLLATION=utf8_general_ci \
+        -DEXTRA_CHARSETS=gbk,gb2312,utf8,ascii \
+        -DWITH_DEBUG=0 \
+        -DWITH_EMBEDDED_SERVER=1 \
+        -DWITH_FAST_MUTEXES=1 \
+        -DWITH_EDITLINE=bundled 
+make 
+make test 
+make install DESTDIR=$DESTDIR INSTALLROOT=$DESTDIR ||exit 1
+}
+
+function gen_post() {
+cat > $CURDIR/post.sh << EOF
+#!/bin/bash
+set -o nounset
+set -o errexit
+grep '^mysql:' /etc/group|grep -v 'grep' &>/dev/null
+if [ \$? != '0' ]
+then
+	groupadd mysql -g 300 && useradd -u 300 -g mysql -c "Mysql Server" mysql -s /sbin/nologin -M
+fi
+EOF
+
+}
+
+function gen_postun(){
+cat > $CURDIR/postun.sh << EOF
+#!/bin/bash
+set -o nounset
+set -o errexit
+mv --backup=t $INSTALLDIR /tmp/
+EOF
+
+}
+
+function gen_preun(){
+cat > $CURDIR/preun.sh << EOF
+#!/bin/bash
+set -o nounset
+set -o errexit
+
+ps axu|grep 'mysql'|grep -v 'grep' &>/dev/null
+if [ \$? != '0' ]
+then
+	echo "Now there are mysql instance running"
+	exit 1
+fi
+EOF
+}
+
+#build
+gen_post
+gen_preun
+gen_postun
+

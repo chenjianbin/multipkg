@@ -1,0 +1,20 @@
+default:
+    name: nginx
+    version: '1.8.1'
+    summary: nginx customized by miguan
+    arch: x86_64
+#    buildprefix: /usr/local/webserver/nginx
+
+rpm:
+    release: '1.centos7'
+    requires: 
+        - glibc
+        - keyutils-libs
+        - krb5-libs
+        - libcom_err
+        - libselinux
+        - openssl-libs
+        - pcre
+        - xz-libs
+        - zlib
+        - psmisc
