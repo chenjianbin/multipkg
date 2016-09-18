@@ -31,6 +31,33 @@ EOF
 
 }
 
+function gen_postun(){
+cat > $CURDIR/postun.sh << EOF
+#!/bin/bash
+set -o nounset
+set -o errexit
+mv --backup=t $INSTALLDIR /tmp/
+EOF
 
-build
+}
+
+function gen_preun(){
+cat > $CURDIR/preun.sh << EOF
+#!/bin/bash
+set -o nounset
+#set -o errexit
+
+ps axu|grep nginx|grep 'master' &>/dev/null
+if [ \$? = '0' ]
+then
+	PID=\`ps axu|grep nginx|grep 'master'|awk '{print \$2}'\`
+	kill \$PID
+fi
+EOF
+}
+
+#build
 gen_post
+gen_preun
+gen_postun
+

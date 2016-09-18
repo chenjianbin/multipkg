@@ -1,0 +1,36 @@
+default:
+    name: docker-php
+    version: '5.6.22'
+    summary: docker-php customized by miguan
+    arch: x86_64
+#    buildprefix: /usr/local/webserver/php
+
+rpm:
+    release: '1.centos7'
+    requires: 
+        - bzip2-libs
+        - cyrus-sasl-lib
+        - freetype
+        - glibc
+        - gmp
+        - keyutils-libs
+        - krb5-libs
+        - libcom_err
+        - libcurl
+        - libidn
+        - libjpeg-turbo
+        - libmcrypt
+        - libpng
+        - libselinux
+        - libssh2
+        - libvpx
+        - libX11
+        - libXau
+        - libxcb
+        - libxml2
+        - libXpm
+        - openldap
+        - openssl-libs
+        - pcre
+        - xz-libs
+        - zlib

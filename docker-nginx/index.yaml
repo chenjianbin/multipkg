@@ -1,7 +1,7 @@
 default:
-    name: nginx
-    version: '1.10.1'
-    summary: nginx customized by miguan
+    name: docker-nginx
+    version: '1.8.1'
+    summary: docker-nginx customized by miguan
     arch: x86_64
 #    buildprefix: /usr/local/webserver/nginx
 
