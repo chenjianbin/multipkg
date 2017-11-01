@@ -13,4 +13,5 @@ rpm:
     - libgcc
     - libstdc++
     - ncurses-libs
+    - readline
     - zlib
